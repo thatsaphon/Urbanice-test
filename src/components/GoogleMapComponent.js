@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react"
 import { GoogleMap, useJsApiLoader } from "@react-google-maps/api"
 
 const containerStyle = {
-  width: "800px",
+  width: "600px",
   height: "400px",
 }
 
@@ -13,6 +13,7 @@ const center = {
 
 function GoogleMapComponent() {
   const search = useRef()
+  const [places, setPlaces] = useState([])
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: "AIzaSyD7vflVcfMSfoxj_YP0HzvMPPLen5Z7_Uk",
@@ -49,13 +50,20 @@ function GoogleMapComponent() {
             type: ["restaurant"],
           },
           (results, status) => {
+            console.log(results)
+            const newPlaces = []
             // eslint-disable-next-line no-undef
             if (status === google.maps.places.PlacesServiceStatus.OK) {
               for (var i = 0; i < results.length; i++) {
-                // eslint-disable-next-line no-undef
+                newPlaces.push({
+                  name: results[i].name,
+                  location: results[i]?.vicinity,
+                })
+
                 createMarker(results[i])
               }
             }
+            setPlaces(newPlaces)
           }
         )
       }
@@ -68,8 +76,6 @@ function GoogleMapComponent() {
   }, [])
 
   function createMarker(place) {
-    // /** @type google.maps.InfoWindow */
-
     // eslint-disable-next-line no-undef
     let infowindow = new google.maps.InfoWindow()
     if (!place.geometry || !place.geometry.location) return
@@ -91,40 +97,58 @@ function GoogleMapComponent() {
     })
   }
 
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      fetchRestaurants()
+    }
+  }
+
   return (
-    <div className="flex flex-col items-center">
-      <div>
-        <input
-          className="border-2 border-solid focus:border-black rounded-md p-2"
-          type="text"
-          ref={search}
-          defaultValue={"Bang Sue"}
-        />
-        <button
-          className="bg-emerald-400 ml-1 rounded-md p-2"
-          onClick={fetchRestaurants}
-        >
-          Search
-        </button>
-      </div>
-      {isLoaded ? (
-        <GoogleMap
-          mapContainerStyle={containerStyle}
-          center={center}
-          onLoad={onLoad}
-          onUnmount={onUnmount}
-          options={{ streetViewControl: false }}
-          zoom={15}
-        >
-          {/* {markers.map((latlng) => (
-            <Marker position={latlng} />
-          ))} */}
-          {/* Child components, such as markers, info windows, etc. */}
+    <div className="flex-col items-center flex justify-center lg:items-start lg:gap-3 lg:flex-row">
+      <div className="flex flex-col items-center">
+        <div>
+          <input
+            className="border-2 border-solid focus:border-black rounded-md p-2"
+            type="text"
+            ref={search}
+            defaultValue={"Bang Sue"}
+            onKeyDown={handleKeyDown}
+          />
+          <button
+            className="bg-emerald-400 ml-1 rounded-md p-2"
+            onClick={fetchRestaurants}
+          >
+            Search
+          </button>
+        </div>
+        {isLoaded ? (
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={center}
+            onLoad={onLoad}
+            onUnmount={onUnmount}
+            options={{ streetViewControl: false }}
+            zoom={15}
+          >
+            {/* {markers.map((latlng) => (
+                <Marker position={latlng} />
+              ))} */}
+            {/* Child components, such as markers, info windows, etc. */}
+            <></>
+          </GoogleMap>
+        ) : (
           <></>
-        </GoogleMap>
-      ) : (
-        <></>
-      )}
+        )}
+      </div>
+      {/* <div className="border-l-2 border-solid border-black"></div> */}
+      <div className="lg:mt-9">
+        {places.map((place, i) => (
+          <div id="i" className="mb-1">
+            <p className="text-zinc-800 font-bold">{place.name}</p>
+            <p className="text-sm text-zinc-600">{place.location}</p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
